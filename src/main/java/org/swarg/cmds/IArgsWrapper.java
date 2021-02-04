@@ -35,6 +35,7 @@ public interface IArgsWrapper
     UUID    argUUID(int i);
     Class   argClass(int i, boolean onlyloaded);
     Method  argMethod(Class clazz);
+    String  join(int i);
     //reflection? Construction
 
     boolean isArgEqual(int i, String value);

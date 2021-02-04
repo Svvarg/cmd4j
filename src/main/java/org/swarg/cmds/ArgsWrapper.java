@@ -595,4 +595,18 @@ public class ArgsWrapper implements IArgsWrapper {
         return hash;
     }
 
+    @Override
+    public String join(int i) {
+        if (this.args != null && i > -1 && i < args.length) {
+            StringBuilder sb = new StringBuilder();
+            for (int k = i; k < args.length; k++) {
+                sb.append(args[k]).append(' ');
+            }
+            if (sb.length() > 1) sb.setLength(sb.length()-1);
+            return sb.toString();
+        }
+        return "";
+    }
+
+
 }

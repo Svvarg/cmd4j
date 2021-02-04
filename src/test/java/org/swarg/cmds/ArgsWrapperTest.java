@@ -688,4 +688,16 @@ public class ArgsWrapperTest
         assertEquals(def,  w.optValueDoubleOrDef(def, "cmd"), delta );
     }
 
+    @Test
+    public void test_join() {
+        System.out.println("join");
+        String orig = "0 1 2 3 4 5 6 7 8";
+        String[] args = orig.split(" ");
+        ArgsWrapper w = new ArgsWrapper(args);
+        assertEquals(orig, w.join(0));
+        assertEquals("5 6 7 8", w.join(5));
+        assertEquals("8", w.join(8));
+        assertEquals("", w.join(99));
+        assertEquals("", w.join(-1));
+    }
 }
