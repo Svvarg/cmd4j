@@ -18,6 +18,9 @@ public interface IArgsWrapper
     boolean push(Object response);
     Object  pull(Class expClass);
 
+    int ai();         //получить индекс текущего аргумента
+    int aipp();       //вренуть индекс текущего аргумента а затем инкрементировать на 1 return ai++
+    int setAi(int i);
     int argsCount();
     int argsRemain(); 
     boolean noArgs(int i);

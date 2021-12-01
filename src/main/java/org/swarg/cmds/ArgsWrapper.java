@@ -85,6 +85,27 @@ public class ArgsWrapper implements IArgsWrapper {
         this.ai++;
         return this;
     }
+    
+    @Override
+    public int ai() {
+        return this.ai;
+    }
+    /**
+     * сначала вернуть текущее значение индекса аргумента затем увеличить его на 1
+     * Пример использования
+     * int x = argI(aipp());
+     * int y = argI(aipp());
+     * @return
+     */
+    @Override
+    public int aipp() {
+        return this.ai++;
+    }
+    @Override
+    public int setAi(int i) {
+        return this.ai = i;
+    }
+    
     /**
      * Поместить объект в результирующее значение ( Например для переноса через
      * глубокую рекурсию в нужное место)
