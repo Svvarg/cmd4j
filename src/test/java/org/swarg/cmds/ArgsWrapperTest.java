@@ -700,4 +700,15 @@ public class ArgsWrapperTest
         assertEquals("", w.join(99));
         assertEquals("", w.join(-1));
     }
+
+    @Test
+    public void test_agrDefInt() {
+        System.out.println("agrDefInt");
+        String[] args = new String[]{"a", "--1", "8", "-4"};
+        ArgsWrapper w = new ArgsWrapper(args);
+        assertEquals(10, w.argI(0, 10));
+        assertEquals(10, w.argI(1, 10));
+        assertEquals(8,  w.argI(2, 10));
+        assertEquals(-4, w.argI(3, 10));
+    }
 }

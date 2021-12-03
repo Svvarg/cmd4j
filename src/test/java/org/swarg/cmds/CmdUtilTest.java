@@ -1,5 +1,7 @@
 package org.swarg.cmds;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Random;
 import org.junit.*;
@@ -500,4 +502,98 @@ public class CmdUtilTest
         }
     }
 
+    @Test
+    public void test_parseAsInt() {
+        System.out.println("parseAsInt");
+        String s0 = "12:34:56-78:91:a0";
+                   //012345678902345678
+        assertEquals(12, CmdUtil.parseAsInt2(s0, 0, -1));
+        assertEquals(-1, CmdUtil.parseAsInt2(s0, 1, -1));
+        assertEquals(34, CmdUtil.parseAsInt2(s0, 3, -1));
+        assertEquals(56, CmdUtil.parseAsInt2(s0, 6, -1));
+        assertEquals(78, CmdUtil.parseAsInt2(s0, 9, -1));
+        assertEquals(91, CmdUtil.parseAsInt2(s0, 12, -1));
+        assertEquals(-1, CmdUtil.parseAsInt2(s0, 16, -1));
+        
+        int i = 0;
+        assertTrue(isDigit(s0, i++));
+        assertTrue(isDigit(s0, i++));
+        assertFalse(isDigit(s0, i++));
+        assertTrue(isDigit(s0, i++));
+        assertTrue(isDigit(s0, i++));
+        assertFalse(isDigit(s0, i++));
+        assertTrue(isDigit(s0, i++));
+        assertTrue(isDigit(s0, i++));
+    }
+
+    /*Первые шаги*/
+    //@Test
+    //public void test_parseTimeDateVariants() {
+    //    System.out.println("parseTimeDateVariants");
+    //
+    //    int cap = 20;
+    //    String[] l = new String[cap];
+    //    String[] e = new String[cap];
+    //    int n = 0;
+    //    /*00*/l[n] = "12:23:34 19-10-21";  e[n++] = "12:23:34 19-10-21";
+    //    /*01*/l[n] = "12:23:34  19-10-21"; e[n++] = "12:23:34 19-10-21";
+    //    /*02*/l[n] = "12  19-10-21";       e[n++] = "12:0:0 19-10-21";
+    //    /*03*/l[n] = "12:23  19-10-21";    e[n++] = "12:23:0 19-10-21";
+    //    /*04*/l[n] = "12:23:34  19-10";    e[n++] = "12:23:34 19-10-0";
+    //    /*05*/l[n] = "12:23:34  19";       e[n++] = "12:23:34 19-0-0";
+    //    /*06*/l[n] = "12:23:34";           e[n++] = "12:23:34 0-0-0";
+    //    /*07*/l[n] = "12:23";              e[n++] = "12:23:0 0-0-0";
+    //    /*07*/l[n] = "12:";                e[n++] = "12:0:0 0-0-0";
+    //    /*07*/l[n] = "12";                 e[n++] = "12:0:0 0-0-0";
+    //    /*07*/l[n] = "24";                 e[n++] = "24:0:0 0-0-0";
+    //    /*07*/l[n] = "-12";                e[n++] = "0:0:0 12-0-0";
+    //    /*07*/l[n] = "-12-09-21";          e[n++] = "0:0:0 12-9-21";
+    //
+    //    for (int i = 0; i < n; i++) {
+    //        String line = l[i];
+    //        String exp = e[i];
+    //        String res = CmdUtil.argTimeMillis(l, i, 0);
+    //        if (!exp.equals(res)) {
+    //            System.out.println("fail line:"+i);
+    //            System.out.println("Exp:"+exp);
+    //            System.out.println("Res:"+res);
+    //            fail("line# " + i);
+    //        }
+    //    }
+    //}
+
+    @Test
+    public void test_parseTDVariants() {
+        System.out.println("parseTDVariants");
+        String[] a = new String[]{
+            /*0*/"12:23:34 19-10-21",
+            /*1*/"12:23:34",     //дату подставит текущую а время указанное
+            /*2*/"1634567800000", //timeMillis
+            /*3*/"25", //распознает как миллис
+            /*4*/"23", //распознает как время - только часыtimeMillis
+            /*5*/"-19-10-21", //время полночь!
+        };
+        long res = CmdUtil.argTimeMillis(a, 0, -1L);
+        long exp = 1634635414000L;
+        assertEquals(exp, res);
+        //String look = Instant.ofEpochMilli(res).atZone(ZoneId.systemDefault()).toString();//2021-10-19T12:23:34+03:00
+        //assertTrue(look.startsWith("2021-10-19T12:23:34"));
+        //System.out.println(res+"\n"+look);
+
+        res = CmdUtil.argTimeMillis(a, 1, -1L);
+        String look = Instant.ofEpochMilli(res).atZone(ZoneId.systemDefault()).toString();//2021-10-19T12:23:34+03:00
+        assertTrue("EqTime", look.contains(a[1]));//2021-12-02T12:23:34
+        //System.out.println(look);
+
+        //просто парсить как лонг
+        assertEquals(1634567800000L/*a[2]*/, CmdUtil.argTimeMillis(a, 2, -1L));
+        assertEquals(25, CmdUtil.argTimeMillis(a, 3, -1L));
+
+        //это уже время полноценное заменит только часы остальное будет как у текущего времени
+        assertNotEquals(23, CmdUtil.argTimeMillis(a, 4, -1L));
+
+        exp = 1634590800000L;//2021-10-19T00:00+03:00
+        //System.out.println(Instant.ofEpochMilli(exp).atZone(ZoneId.systemDefault()).toString());//2021-10-19T00:00+03:00
+        assertEquals(exp, CmdUtil.argTimeMillis(a, 5, -1L));
+    }
 }

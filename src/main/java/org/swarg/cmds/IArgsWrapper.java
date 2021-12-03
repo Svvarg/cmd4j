@@ -38,6 +38,7 @@ public interface IArgsWrapper
     UUID    argUUID(int i);
     Class   argClass(int i, boolean onlyloaded);
     Method  argMethod(Class clazz);
+    long    argTimeMillis(int i, long def);
     String  join(int i);
     //reflection? Construction
 
@@ -61,7 +62,8 @@ public interface IArgsWrapper
     boolean hasOpt(String...optNames);
     String  optValue(String...optNames); //String defOnKeyExists,
     String  optValueOrDef(String def, String...optNames);
+    int     optValueIntOrDef(int def, String...optNames);
     long    optValueLongOrDef(long def, String...optNames);
     double  optValueDoubleOrDef(double def, String...optNames);
-
+    long    optValueTimeMillisOrDef(long def, String...optNames);
 }

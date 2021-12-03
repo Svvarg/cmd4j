@@ -360,6 +360,27 @@ public class ArgsWrapper implements IArgsWrapper {
         return uuid;
     }
 
+    /**
+     * Распарсить строку содержащую данные о времени в лонг(тайм-миллис)
+     * поддерживается как простое лонг число, так и читабельные время-дата
+     * варианты:
+     * HH:mm:ss-dd:MM:yy
+     * HH:mm:ss--dd:MM:yy
+     * HH:mm--dd:MM:yy
+     * HH:mm--dd
+     * HH--dd
+     * HH
+     * -dd:MM:yy
+     * и т.д пропущенные элементы берутся из текущего времени используя
+     * ZoneOffset.systemDefault()
+     * @param i
+     * @param def
+     * @return
+     */
+    @Override
+    public long argTimeMillis(int i, long def) {
+        return CmdUtil.argTimeMillis(args, i, def);
+    }
 
     /**
      * Индекс строки в find равной аргументу из arg[i]
@@ -562,6 +583,11 @@ public class ArgsWrapper implements IArgsWrapper {
     public long optValueLongOrDef(long def, String...optNames) {
         return CmdUtil.optValueLongOrDef(args, def, optNames);
     }
+
+    @Override
+    public int optValueIntOrDef(int def, String...optNames) {
+        return CmdUtil.optValueIntOrDef(args, def, optNames);
+    }
     /**
      * Получить значение опционального ключа по одному из его имён
      * Если значение ключа не задано(или в значении не число)
@@ -577,6 +603,32 @@ public class ArgsWrapper implements IArgsWrapper {
         return CmdUtil.optValueDoubleOrDef(args, def, optNames);
     }
 
+    /**
+     * Получить время в timeMillis как из простого числа так и из отформатированной
+     * даты-веремни в удобном формате
+     * если указано число - распарсить его как лонг
+     *
+     * Парсинг вариативного времени--даты в Epoch millis относительно текущей даты
+     * с выводом def Значения при провале парсинга.
+     * Если указано целое положительное число больше 24 распарсить его как лонг
+     * и вернуть(считая что было введено timeMillis а не отформатированная дата-время)
+     * Поддерживаемые варианты ввода(Разделителями могут быть любые символы):
+     * HH:mm:ss-dd:MM:yy
+     * HH:mm:ss--dd:MM:yy
+     * HH:mm--dd:MM:yy
+     * HH:mm--dd
+     * HH--dd
+     * и т.д не указанные параметры берутся из текущего времени используя
+     * ZoneOffset.systemDefault()
+     *
+     * @param def
+     * @param optNames
+     * @return
+     */
+    @Override
+    public long optValueTimeMillisOrDef(long def, String...optNames) {
+        return CmdUtil.optValueTimeMillisOrDef(args, def, optNames);
+    }
 
 
     @Override
