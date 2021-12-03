@@ -15,12 +15,19 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface ACmd {
-    /*полное имя команды (обязательное)*/
+    /*полное имя команды (обязательное) 
+    При использовании совместно с CommandMHContainer не может быть пустым,
+    не может начинатся с цифр. Допустимо начало с тире*/
     String name();
-    /*скоращенное имя команды может отсутствовать*/
+    /*скоращенное имя команды. может отсутствовать(приравнивается к null)*/
     String sname() default "";
+    /*Автоматически выводимые Usage например при недостатке аргументов*/
     String usage() default "";
     String desc() default "";
-    //String parent() default ""; //для Sub комманд
+    /*минимальное число требуемых аргументов для запуска команды
+    При недостатке рагументов - автоматические  выводить usage.
+    0 - команда может быть запущена без аргументов*/
+    int    reqArgs() default 0;
     Class[] permissions() default {};
+    //String parent() default ""; //для Sub комманд
 }
