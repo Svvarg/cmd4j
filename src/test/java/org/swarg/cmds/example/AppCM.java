@@ -74,7 +74,10 @@ public class AppCM extends CmdManager {
      */
     public void performCmd(IArgsWrapper w) {
         if (w.isHelpCmdOrNoArgs()) {
-            out.println(status(true, false));
+            boolean showDesc = true;
+            boolean showUsage = true;
+            boolean verbose = false;
+            out.println(status(showDesc, showUsage, verbose));
             return;
         }
         /*Смотрим на текущий (0й) элемент массива args и если знаем такую команду -выполняем*/

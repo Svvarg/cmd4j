@@ -220,8 +220,9 @@ public class CmdManagerTest {
         assertEquals(true, cm.hasCmd("sum"));
         assertEquals(true, cm.hasCmd("echo"));
         //System.out.println("##"+res);
-
-        res = cm.status(true, true).toString();
+        boolean showDesc = true;
+        boolean showUsage = true;
+        res = cm.status(showDesc, showUsage, true).toString();
         CmdMHBox echo1 = cm.getCmdBox("e");
         CmdMHBox echo2 = cm.getCmdBox("echo");
         assertEquals(echo1, echo2);

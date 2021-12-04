@@ -329,8 +329,16 @@ public class CmdManager {
         throw new IllegalStateException("no command");
     }
 
-
-    public StringBuilder appendCmdBoxInfo(StringBuilder sb, CmdMHBox c, boolean showDescAndUsage, boolean verbose) {
+    /**
+     * Форматированная справка о команде
+     * @param sb
+     * @param c
+     * @param showDesc
+     * @param showUsage
+     * @param verbose
+     * @return
+     */
+    public StringBuilder appendCmdBoxInfo(StringBuilder sb, CmdMHBox c, boolean showDesc, boolean showUsage, boolean verbose) {
         if (c != null && sb != null) {
             //простое форматирование короткого имени если оно есть либо 4 пробела
             //   e|echo
@@ -347,26 +355,35 @@ public class CmdManager {
             sb.append('|');
             
             sb.append(c.name()).append("  ");
-            
-            if (showDescAndUsage) {
-                if (c.desc() != null) {
-                    sb.append(c.desc());
-                }
-                if (c.usage != null) {
-                    sb.append(' ').append(c.usage());
-                }
+
+            boolean descPrinted = false;
+            if (showDesc && c.hasDesc()) {
+                sb.append(c.desc());
+                descPrinted = true;
             }
+
+            if (showUsage && c.hasUsage()) {
+                if (descPrinted) {
+                    sb.append('\n').append("     ");//?
+                }
+                sb.append(' ').append(c.usage());
+            }
+            //сколько минимум аргументов нужно для вызова команды
+            //"чтобы не показывало Usage"
+            sb.append(" [ReqArgs:").append(c.reqArgs()).append("] ");
+
         }
         return sb;
     }
 
     /**
      * Список всех зареганых команн и методов на которые они зареганы
-     * @param showDescAndUsage
+     * @param showDesc
+     * @param showUsage
      * @param verbose
      * @return
      */
-    public StringBuilder status(boolean showDescAndUsage, boolean verbose) {
+    public StringBuilder status(boolean showDesc, boolean showUsage, boolean verbose) {
         StringBuilder sb = new StringBuilder();
         if (!name2box.isEmpty()) {
             //отобразит количество связей имя-команда (может быть больше чем самих команд. т.к. есть и сокращенные имена
@@ -377,7 +394,7 @@ public class CmdManager {
                 CmdMHBox c = e.getValue();
                 //только для полных имён команд(чтобы исключить повторение для коротких имён)
                 if (c != null && c.isFullName(name)) {
-                    appendCmdBoxInfo(sb, c, showDescAndUsage, verbose).append('\n');
+                    appendCmdBoxInfo(sb, c, showDesc, showUsage, verbose).append('\n');
                 }
             }
 
@@ -431,32 +448,6 @@ public class CmdManager {
         }
         return false;
     }
-//    /**
-//     *
-//     * @param w
-//     * @return
-//     */
-//    public Object runCmd(IArgsWrapper w) {
-//        final String cmd = w.arg(w.ai());
-//        if (hasCmd(cmd)) {
-//            w.inc();
-//            CmdMHBox box = getCmdBox(cmd);
-//            //если нет аргументов и данная команда не может быть запущена без аргументов - показать usage
-//            if (!w.hasArg() && !box.hasEmptyCall) {
-//                w.push(box.usage);
-//                //return box.usage;
-//            }
-//            else {
-//                this.lastError = box.perform(w);
-//                if (this.lastError == null) {
-//                    //return String.valueOf(w.pull(Object.class));
-//                }
-//            }
-//            return w.pull(Object.class);
-//        } else {
-//            return "Not found cmd: " + cmd;
-//        }
-//    }
 
 
     public boolean hasError() {
@@ -492,27 +483,30 @@ public class CmdManager {
             ans = getCMUsage();
         }
 
-        //показать все зареганые команды
-        //если указать имя команды - вывести данные по указанной команде
+        //показать все зареганые команды (файктически это создание справки на лету)
+        //если указать имя команды - вывести данные только для указанной команды
         else if (w.isCmd("status", "st")) {
             if (w.isHelpCmd()) {
-                ans = "[cmdName] [-v|-verbose] [-ndu|-no-desc-usage]";
+                ans = "[cmdName] [-v|-verbose] [-nd|-no-desc] [-nu|-no-usage]";
             } else {
-                boolean showDescUsage = !w.hasOpt("-no-desc-usage", "-ndu");
-                boolean verbose = w.hasOpt("-v", "-verbose");
+                boolean showDesc  = !w.hasOpt("-no-desc", "-nd");
+                boolean showUsage = !w.hasOpt("-no-usage", "-nu");
+                /*для кастомизации вывода, путём переопределения метода
+                appendCmdBoxInfo в наследниках CmdManager`a*/
+                boolean verbose   =  w.hasOpt("-v", "-verbose");
                 //для одной конкретной
                 if (w.hasArg()) {
                     final String cmd = w.arg(w.ai());
                     if (hasCmd(cmd)) {
                         CmdMHBox box = getCmdBox(cmd);
-                        ans = appendCmdBoxInfo(new StringBuilder(), box, showDescUsage, verbose);
+                        ans = appendCmdBoxInfo(new StringBuilder(), box, showDesc, showUsage, verbose);
                     } else {
                         ans = "Not found cmd: " + cmd;
                     }
                 } 
                 //для всех зареганых команд
                 else {
-                    ans = status(showDescUsage, verbose);
+                    ans = status(showDesc, showUsage, verbose);
                 }
             }
         }
