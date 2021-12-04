@@ -472,8 +472,10 @@ public class CmdManager {
     protected String getCMUsage() { 
         return "<status/reg-class/unreg-class/reg-method/unreg-cmd/rename-command/run>";
     }
+
     /**
-     *
+     * Минимальный готовый набор команд для ручного взаимодействия с CmdManager`ом
+     * Например для ручной регистрации командами в рантайме через консоль
      * @param w
      * @return
      */
@@ -483,149 +485,31 @@ public class CmdManager {
             ans = getCMUsage();
         }
 
-        //показать все зареганые команды (файктически это создание справки на лету)
-        //если указать имя команды - вывести данные только для указанной команды
         else if (w.isCmd("status", "st")) {
-            if (w.isHelpCmd()) {
-                ans = "[cmdName] [-v|-verbose] [-nd|-no-desc] [-nu|-no-usage]";
-            } else {
-                boolean showDesc  = !w.hasOpt("-no-desc", "-nd");
-                boolean showUsage = !w.hasOpt("-no-usage", "-nu");
-                /*для кастомизации вывода, путём переопределения метода
-                appendCmdBoxInfo в наследниках CmdManager`a*/
-                boolean verbose   =  w.hasOpt("-v", "-verbose");
-                //для одной конкретной
-                if (w.hasArg()) {
-                    final String cmd = w.arg(w.ai());
-                    if (hasCmd(cmd)) {
-                        CmdMHBox box = getCmdBox(cmd);
-                        ans = appendCmdBoxInfo(new StringBuilder(), box, showDesc, showUsage, verbose);
-                    } else {
-                        ans = "Not found cmd: " + cmd;
-                    }
-                } 
-                //для всех зареганых команд
-                else {
-                    ans = status(showDesc, showUsage, verbose);
-                }
-            }
+            ans = cmStatus(w);
         }
-
-        //ручная регистрация метода. если не указывать имя команды оно будет равно имени метода
         else if (w.isCmd("reg-method", "rm")) {
-            if (w.isHelpCmdOrNoArgs() || w.argsCount() < 2) {
-                ans = "(class) (method) [name] [sname]";
-            } else {
-                String clazz = w.arg(w.aipp());
-                String method= w.arg(w.aipp());
-                String name  = w.arg(w.aipp());//имена не обязательны
-                String sname = w.arg(w.aipp());
-                int cnt = regCmd(clazz, method, name, sname);
-                ans = "["+ clazz +"."+method+ "] isReg: " + (cnt > 0);
-            }
+            ans = cmReqMethod(w);
         }
-
-        /*снять команду с регистрации по одному или обоим именам
-        достаточно указать одно любое из имён команды (полное или сокращенное)
-        т.к все имена проверяются на уникальность. и не может быть две разных
-        команды с одинаковыми сокращенными именами*/
         else if (w.isCmd("unreg-cmd", "uc")) {
-            if (w.isHelpCmdOrNoArgs()) {
-                ans = "(name)";
-            } else {
-                String name = w.arg(w.aipp());
-                if (hasCmd(name)) {
-                    CmdMHBox box = getCmdBox(name);
-                    boolean unreg = unreg(box);
-                    ans = "UnReg: " + box.name() + "|" + box.sname() + " : " + unreg;
-                }
-            }
+            ans = cmUnregCmd(w, ans);
         }
-
-        //зареристрировать автоматические все аннотированные(ACmd) методы в заданном классе
         else if (w.isCmd("reg-class", "rc")) {
-            if (w.isHelpCmdOrNoArgs()) {
-                ans = "(class)";//[Default:"+"org.swarg.mcforge.tools.DebugTools
-            } else {
-                String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
-                //например для того чтобы пропустить ошибки в именах команд из аннотайций или другие ошибки
-                boolean ignoreErrors = w.hasOpt("-ignore-errors", "-ie");//только для IllegalArgumentException заполнение данных по аннотациям
-                int cnt = registerClass(clazz, ignoreErrors);
-                ans = "[" + clazz + "] commands Registered: " + cnt;
-            }
+            ans = cmRegClass(w);
         }
-        //снять с регистрации все команды(аннотированные ACmd) методы заданного класса
         else if (w.isCmd("unreg-class", "uc")) {
-            if (w.isHelpCmdOrNoArgs()) {
-                ans = "(class)";
-            } else {
-                String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
-                int cnt = unregClass(clazz);
-                ans = "["+ clazz + "] commands UnRegistered: " + cnt;
-            }
+            ans = cmUngerClass(w);
         }
-
-        /*переназначить имя команды на лету
-        (Актуально например для резервных методов с1-с8 для которых задано
-        дефолтные имена. (javaagent) */
         else if (w.isCmd("rename-command", "rnc")) {
-            if (w.isHelpCmdOrNoArgs() || w.argsCount() < 2) {
-                ans = "(lastname) (newfullname) [newshortname]";
-            } else {
-                String lastname = w.arg(w.aipp());
-                //нахожу по указанному имени обёртку над командой
-                if (!hasCmd(lastname)) {
-                //CmdMHBox box = name2box.get(lastname);
-                    ans = "Not found command " + lastname;
-                } else {
-                    String name = w.arg(w.aipp());
-                    String sname = w.arg(w.aipp());
-                    int errors = 0;
-                    if (!CmdMHBox.isValidName(name)) {
-                        ans = "invalid name: '" + name + "'";
-                        ++errors;
-                    }
-                    else if (hasCmd(name)) {
-                        ans = "Already registered[1]: '" + name + "'";
-                        ++errors;
-                    }
-                    if (sname != null && !sname.isEmpty()) {
-                        if (!CmdMHBox.isValidName(sname)) {
-                            ans = "invalid sname: '" + sname + "'";
-                            ++errors;
-                        }
-                        else if (hasCmd(sname)) {
-                            ans = "Already registered[2]: '" + sname + "'";
-                            ++errors;
-                        }
-                    }
-                    if (errors == 0) {
-                        CmdMHBox box = getCmdBox(lastname);
-                        unreg(box);
-                        String lsn = box.sname();
-                        box.setNames(name, sname);
-                        boolean reg = register(box) > 0;
-                        ans = "Command renamed: " + reg + " [" + lastname + "|" + lsn + "] > [" + box.name() + "|" + box.sname() + "]";
-                    }
-                }
-            }
+            ans = cmRenameCmd(w, ans);
         }
-
-        //для отладки и проверок(тестирование) подразумевается иной способ вызова зареганых команд, но можно и так
         else if (w.isCmd("run", "r")) {
-            if (processCommand(w)) {
-                ans = w.pull(Object.class);
-            } else {
-                ans = "Not Found cmd: '" + w.arg(w.ai()) + "'";
-            }
+            ans = cmRunCmd(w);
         }
 
         //для отладки
         else if (w.isCmd("last-error", "le")) {
-            ans = this.lastError == null ? "-": this.lastError.getClass() + " " + this.lastError.getMessage();
-            if (w.hasOpt("-print", "-p")) {
-                this.lastError.printStackTrace();
-            }
+            ans = cmLastError(w);
         }
 
         else if (moreDefaultCmds(w)) {
@@ -636,7 +520,6 @@ public class CmdManager {
 
         return w.push(ans);
     }
-
 
     /**
      * для добавления в cmdCommandManager своих дефолтных команд
@@ -651,6 +534,221 @@ public class CmdManager {
         //} else
         return false;
     }
+
+
+    /* --------------------------------------------------------------------- \
+      Реализация логики обработчика команд для взаимодействия с CmdManager
+      (например в рантайме через консоль) node - cmdCommandManager()
+    \  -------------------------------------------------------------------- */
+
+
+    /**
+     * Формирование справки по всем зареганым командам
+     * Либо вывод справки по одной указанной
+     *
+     * Состояние CmdManager`а - показать все зарегестрированные в нём команды
+     * (файктически это создание справки на лету)
+     * @param w
+     * @return
+     */
+    protected Object cmStatus(IArgsWrapper w) {
+        Object ans;
+        if (w.isHelpCmd()) {
+            ans = "[cmdName] [-v|-verbose] [-nd|-no-desc] [-nu|-no-usage]";
+        } else {
+            boolean showDesc  = !w.hasOpt("-no-desc", "-nd");
+            boolean showUsage = !w.hasOpt("-no-usage", "-nu");
+            /*для кастомизации вывода, путём переопределения метода
+            appendCmdBoxInfo в наследниках CmdManager`a*/
+            boolean verbose   =  w.hasOpt("-v", "-verbose");
+            //для одной конкретной
+            if (w.hasArg()) {
+                final String cmd = w.arg(w.ai());
+                if (hasCmd(cmd)) {
+                    CmdMHBox box = getCmdBox(cmd);
+                    ans = appendCmdBoxInfo(new StringBuilder(), box, showDesc, showUsage, verbose);
+                } else {
+                    ans = "Not found cmd: " + cmd;
+                }
+            }
+            //для всех зареганых команд
+            else {
+                ans = status(showDesc, showUsage, verbose);
+            }
+        }
+        return ans;
+    }
+
+
+    /**
+     * Зареристрировать автоматические все аннотированные(ACmd) методы в
+     * заданном классе.
+     * @param w
+     * @return
+     */
+    protected Object cmRegClass(IArgsWrapper w) {
+        Object ans;
+        if (w.isHelpCmdOrNoArgs()) {
+            ans = "(class) [-ie|-ignore-errors]";//[Default:"+"org.swarg.mcforge.tools.DebugTools
+        } else {
+            String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
+            //например для того чтобы пропустить ошибки в именах команд из аннотайций или другие ошибки
+            boolean ignoreErrors = w.hasOpt("-ignore-errors", "-ie");//только для IllegalArgumentException заполнение данных по аннотациям
+            int cnt = registerClass(clazz, ignoreErrors);
+            ans = "[" + clazz + "] Commands Registered: " + cnt;
+            //todo вывод полных имён
+        }
+        return ans;
+    }
+
+    /**
+     * Cнять с регистрации все команды (аннотированные ACmd) методы для
+     * указанного класса
+     * @param w
+     * @return
+     */
+    protected Object cmUngerClass(IArgsWrapper w) {
+        Object ans;
+        if (w.isHelpCmdOrNoArgs()) {
+            ans = "(class)";
+        } else {
+            String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
+            int cnt = unregClass(clazz);
+            ans = "["+ clazz + "] Command UnRegistered: " + cnt;
+        }
+        return ans;
+    }
+
+    /**
+     * Ручная регистрация метода. если не указывать имя команды оно будет 
+     * автоматически взято из имени метода.
+     * Для снятия команды с регистрации используй cmUnregCmd
+     * @param w
+     * @return
+     */
+    protected Object cmReqMethod(IArgsWrapper w) {
+        Object ans;
+        if (w.isHelpCmdOrNoArgs() || w.argsCount() < 2) {
+            ans = "(class) (method) [name] [sname]";
+        } else {
+            String clazz = w.arg(w.aipp());
+            String method= w.arg(w.aipp());
+            String name  = w.arg(w.aipp());//имена не обязательны
+            String sname = w.arg(w.aipp());
+            int cnt = regCmd(clazz, method, name, sname);
+            ans = "["+ clazz +"."+method+ "] isReg: " + (cnt > 0);
+        }
+        return ans;
+    }
+
+    /**
+     * Снять команду с регистрации по одному или обоим именам
+     * достаточно указать одно любое из имён команды (полное или сокращенное)
+     * т.к все имена проверяются на уникальность. и не может быть две разных
+     * команды с одинаковыми сокращенными именами
+     * @param w
+     * @param ans
+     * @return
+     * (cmUnregMethod)
+     */
+    protected Object cmUnregCmd(IArgsWrapper w, Object ans) {
+        if (w.isHelpCmdOrNoArgs()) {
+            ans = "(name)";
+        } else {
+            String name = w.arg(w.aipp());
+            if (hasCmd(name)) {
+                CmdMHBox box = getCmdBox(name);
+                boolean unreg = unreg(box);
+                ans = "UnReg: " + box.name() + "|" + box.sname() + " : " + unreg;
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * [Debug]
+     * @param w
+     * @return
+     */
+    protected Object cmLastError(IArgsWrapper w) {
+        Object ans;
+        ans = this.lastError == null ? "-": this.lastError.getClass() + " " + this.lastError.getMessage();
+        if (w.hasOpt("-print", "-p")) {
+            this.lastError.printStackTrace();
+        }
+        return ans;
+    }
+
+    /**
+     * переназначить имя команды на лету
+     * (Актуально например для резервных методов с1-с8 для которых заданы
+     * дефолтные имена. (javaagent)
+     * @param w
+     * @param ans
+     * @return
+     */
+    protected Object cmRenameCmd(IArgsWrapper w, Object ans) {
+        if (w.isHelpCmdOrNoArgs() || w.argsCount() < 2) {
+            ans = "(lastname) (newfullname) [newshortname]";
+        } else {
+            String lastname = w.arg(w.aipp());
+            //нахожу по указанному имени обёртку над командой
+            if (!hasCmd(lastname)) {
+                //CmdMHBox box = name2box.get(lastname);
+                ans = "Not found command " + lastname;
+            } else {
+                String name = w.arg(w.aipp());
+                String sname = w.arg(w.aipp());
+                int errors = 0;
+                if (!CmdMHBox.isValidName(name)) {
+                    ans = "invalid name: '" + name + "'";
+                    ++errors;
+                }
+                else if (hasCmd(name)) {
+                    ans = "Already registered[1]: '" + name + "'";
+                    ++errors;
+                }
+                if (sname != null && !sname.isEmpty()) {
+                    if (!CmdMHBox.isValidName(sname)) {
+                        ans = "invalid sname: '" + sname + "'";
+                        ++errors;
+                    }
+                    else if (hasCmd(sname)) {
+                        ans = "Already registered[2]: '" + sname + "'";
+                        ++errors;
+                    }
+                }
+                if (errors == 0) {
+                    CmdMHBox box = getCmdBox(lastname);
+                    unreg(box);
+                    String lsn = box.sname();
+                    box.setNames(name, sname);
+                    boolean reg = register(box) > 0;
+                    ans = "Command renamed: " + reg + " [" + lastname + "|" + lsn + "] > [" + box.name() + "|" + box.sname() + "]";
+                }
+            }
+        }
+        return ans;
+    }
+
+    /**
+     * Для отладки и проверок(тестирование) подразумевается иной способ вызова
+     * зареганых команд, но можно и так.
+     * Запускаем команду по её имени с выводом результата её работы
+     * TODO showLastError
+     * @param w
+     * @return 
+     */
+    protected Object cmRunCmd(IArgsWrapper w) {
+        Object ans;
+        if (processCommand(w)) {
+            ans = w.pull(Object.class);
+        } else {
+            ans = "Not Found cmd: '" + w.arg(w.ai()) + "'";
+        }
+        return ans;
+    }
+
 
 }
 
