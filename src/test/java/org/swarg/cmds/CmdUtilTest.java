@@ -572,6 +572,9 @@ public class CmdUtilTest
             /*3*/"25", //распознает как миллис
             /*4*/"23", //распознает как время - только часыtimeMillis
             /*5*/"-19-10-21", //время полночь!
+            /*6*/"0",  //самое начало эпохи
+            /*7*/"00", //полночь относительно текущей даты
+
         };
         long res = CmdUtil.argTimeMillis(a, 0, -1L);
         long exp = 1634635414000L;
@@ -595,5 +598,10 @@ public class CmdUtilTest
         exp = 1634590800000L;//2021-10-19T00:00+03:00
         //System.out.println(Instant.ofEpochMilli(exp).atZone(ZoneId.systemDefault()).toString());//2021-10-19T00:00+03:00
         assertEquals(exp, CmdUtil.argTimeMillis(a, 5, -1L));
+
+        // "0" - распарсит как начало эпохи
+        assertEquals(0, CmdUtil.argTimeMillis(a, 6, -1L));
+        // "00" - как указание только часов относительно текущего времени.
+        assertTrue(CmdUtil.argTimeMillis(a, 7, -1L) > 0);
     }
 }
