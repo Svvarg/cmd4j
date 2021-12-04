@@ -135,6 +135,14 @@ public class CmdMHBox {
         return isValidName(this.sname) && !this.sname.equals(this.name);
     }
 
+    public boolean hasDesc() {
+        return this.desc!=null && !this.desc.isEmpty();
+    }
+
+    public boolean hasUsage() {
+        return this.usage!=null && !this.usage.isEmpty();
+    }
+
     public MethodHandle getMethodHandle() {
         return mhandle;
     }
@@ -294,8 +302,14 @@ public class CmdMHBox {
     public Throwable perform(IArgsWrapper w) {
         if (w != null && this.mhandle != null) {
             //если требуется аргументов больше чем имеется - вывести usage
-            if (reqArgs > w.argsRemain() ) {
-                w.push((usage == null || usage.isEmpty()) ? ("Args Required: " + reqArgs) : usage);
+            boolean isHelpCmd = false;
+            if ((reqArgs > w.argsRemain() || (isHelpCmd=w.isHelpCmd()))) {
+                //если нет описания как использовать(Usage) вывести требуемое количество аргументов
+                String aUsage = (!hasUsage()) ? ("Args Required: " + reqArgs) : usage;
+                if (isHelpCmd && hasDesc()) {
+                    aUsage = desc + "\n" + aUsage;
+                }
+                w.push(aUsage);
                 //t = уведомлять ли?
             }
             else {
