@@ -284,7 +284,9 @@ public class CmdUtil
      * Время в миллис из строки в лонг число. Если указано просто число (больше
      * 24) - распарсить его в лонг Если указана дата-время - распарсить и
      * вернуть для него общемировой timeMillis HH:mm:ss-dd-MM-yy
-     *
+     * для того чтобы указать полночь используй "00:00" либо "00"
+     * строка "0" распознается кака дата самого начала эпохи 1970год и вернёт 0
+     * "00"-"23" - часы,  "0"| > "23" - начало эпохи
      * @param args
      * @param i
      * @param def
@@ -292,10 +294,11 @@ public class CmdUtil
      */
     public static long argTimeMillis(String[] args, int i, long def) {
         final String s = arg(args, i);
+        final int sz = s == null ? 0 : s.length();
         if (CmdUtil.isIntNum(s, true)) {
             try {
                 long v = Long.parseLong(s);
-                if (v > 23) {
+                if (v > 23 || sz != 2) {// "00"-"23" - часы,  "0"| > "23" - начало эпохи
                     return v;
                 }
             }
