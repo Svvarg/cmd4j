@@ -328,6 +328,7 @@ public class CmdUtil
      * hh:mm
      * -dd:mm:yy
      * HH:mm:ss--dd:MM:yy
+     * Элементы даты и времени должны указываться строго двумя числами!
      * @param s
      * @param off
      * @return LocalDateTime
@@ -365,13 +366,17 @@ public class CmdUtil
             }
 
             if (off + 2 <= sz) {
-                d = parseAsInt2(s, off, 0); off += 3;
+                d = parseAsInt2(s, off, d);//off += 3;
+                //Для того чтобы можно было день указывать одним числом высчитываю на сколько нужно сместиться
+                off += (d > 9) ? 3 : 1 + (isDigit(s, off) ? 1 : 0) + (isDigit(s, off+1) ? 1 : 0);
+
                 if (off < sz) {
-                    M = parseAsInt2(s, off, 0); off += 3;
+                    M = parseAsInt2(s, off, M); off += 3;
                 }
                 if (off < sz) {
-                    y = parseAsInt2(s, off, 0); off += 3;
+                    y = parseAsInt2(s, off, y); off += 3;
                 }
+                //if (d < 0 || M < 0 || y < 0) throw new IllegalStateException("Unparsed date: '" + s+"'");
             }
             //return h+":"+m+":"+sec+" "+d+"-"+M+"-"+y;
             if (y < 1970) {
@@ -394,6 +399,7 @@ public class CmdUtil
     }
     /**
      * "12" -> 12
+     * Только положительные числа
      * @param s
      * @param off
      * @param def
@@ -402,11 +408,16 @@ public class CmdUtil
     public static int parseAsInt2(String s, int off, int def) {
         int sz = s == null ? 0 : s.length();
         if (off >= 0 && off+1 < sz) {
-            int d = s.charAt(off) - '0';//0==49
-            int e = s.charAt(off+1) - '0';
-            if (d >= 0 && d <= 9 && e >= 0 && e <= 9) {
-                return d * 10 + e;
+            int n1 = s.charAt(off) - '0';//0==49
+            int n2 = s.charAt(off+1) - '0';
+            int v = 0;
+            if (n1 >= 0 && n1 <= 9 ) {
+                v = n1;
+            } 
+            if (n2 >= 0 && n2 <= 9) {
+                v = v * 10 + n2;
             }
+            return v;
         }
         return def;
     }

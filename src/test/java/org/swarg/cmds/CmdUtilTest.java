@@ -1,6 +1,7 @@
 package org.swarg.cmds;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Random;
@@ -508,7 +509,7 @@ public class CmdUtilTest
         String s0 = "12:34:56-78:91:a0";
                    //012345678902345678
         assertEquals(12, CmdUtil.parseAsInt2(s0, 0, -1));
-        assertEquals(-1, CmdUtil.parseAsInt2(s0, 1, -1));
+        assertEquals( 2, CmdUtil.parseAsInt2(s0, 1, -1));//"2:"
         assertEquals(34, CmdUtil.parseAsInt2(s0, 3, -1));
         assertEquals(56, CmdUtil.parseAsInt2(s0, 6, -1));
         assertEquals(78, CmdUtil.parseAsInt2(s0, 9, -1));
@@ -603,5 +604,36 @@ public class CmdUtilTest
         assertEquals(0, CmdUtil.argTimeMillis(a, 6, -1L));
         // "00" - как указание только часов относительно текущего времени.
         assertTrue(CmdUtil.argTimeMillis(a, 7, -1L) > 0);
+    }
+
+    /*Новая механика - возможность указывать день одним числом
+    04-12 vs 4-12*/
+    @Test
+    public void test_parseTimeDateVariantsCase001() {
+        System.out.println("parseTimeDateVariants");
+        String s = "22-30--4-12";
+        LocalDateTime res = CmdUtil.parseTimeDateVariants(s, 0);
+        assertEquals(22, res.getHour());
+        assertEquals(30, res.getMinute());
+        assertEquals(4, res.getDayOfMonth());
+        assertEquals(12, res.getMonthValue());
+
+        String s2 = "-8-11";
+        LocalDateTime res2 = CmdUtil.parseTimeDateVariants(s2, 0);
+        assertEquals(0, res2.getHour());
+        assertEquals(0, res2.getMinute());
+        assertEquals(8, res2.getDayOfMonth());
+        assertEquals(11, res2.getMonthValue());
+        //-8-9 - не будет работать нужно указывать -8-09
+
+        LocalDateTime now = LocalDateTime.now();
+
+        //месяц обязательно через два числа, либо подставит текущий месяц
+        String s3 = "-2-1";
+        LocalDateTime res3 = CmdUtil.parseTimeDateVariants(s3, 0);
+        assertEquals(0, res3.getHour());
+        assertEquals(0, res3.getMinute());
+        assertEquals(2, res3.getDayOfMonth());
+        assertEquals(now.getMonthValue(), res3.getMonthValue());
     }
 }
