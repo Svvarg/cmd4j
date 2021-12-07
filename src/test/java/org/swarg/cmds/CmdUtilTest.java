@@ -636,4 +636,16 @@ public class CmdUtilTest
         assertEquals(2, res3.getDayOfMonth());
         assertEquals(now.getMonthValue(), res3.getMonthValue());
     }
+
+    @Test
+    public void test_getClassNameFrom() {
+        System.out.println("getClassNameFrom");
+        String in = "Dev/2021/cmds4j/src/main/java/org/swarg/cmds/CmdManager.java";
+        String exp = "org.swarg.cmds.CmdManager";
+        assertEquals(exp, getClassNameFrom(in));
+        assertEquals(exp, getClassNameFrom(exp));
+        assertEquals(exp, getClassNameFrom("org/swarg/cmds/CmdManager"));
+        assertEquals(exp, getClassNameFrom("org\\swarg\\cmds\\CmdManager"));
+        assertEquals(exp, getClassNameFrom("src/main/java/org/swarg/cmds/CmdManager"));
+    }
 }

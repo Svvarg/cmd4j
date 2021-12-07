@@ -571,6 +571,24 @@ public class CmdUtil
     }
 
     /**
+     * Dev/2021/cmds4j/src/main/java/org/swarg/cmds/CmdManager.java ->  org.swarg.cmds.CmdManager
+     * @param s
+     * @return
+     */
+    public static String getClassNameFrom(String s) {
+        if (s != null && s.endsWith(".java") || s.indexOf('.') < 0) {
+            //если указано внутреннее имя со слэшами вместо точек - заменить точки
+            s = s.replace('\\', '.').replace('/', '.');
+            final String tag = "src.main.java.";
+            int b = s.indexOf(tag);
+            b = (b < 0) ? 0: b + tag.length();
+            int e = s.endsWith(".java") ? s.length() - 5 : s.length();
+            s = s.substring(b, e);
+        }
+        return s;
+    }
+
+    /**
      *
      * @param obj
      * @param out
