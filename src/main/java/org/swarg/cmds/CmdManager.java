@@ -591,11 +591,15 @@ public class CmdManager {
         if (w.isHelpCmdOrNoArgs()) {
             ans = "(class) [-ie|-ignore-errors]";//[Default:"+"org.swarg.mcforge.tools.DebugTools
         } else {
-            String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
+            String clazz = CmdUtil.getClassNameFrom(w.arg(w.aipp()));
             //например для того чтобы пропустить ошибки в именах команд из аннотайций или другие ошибки
             boolean ignoreErrors = w.hasOpt("-ignore-errors", "-ie");//только для IllegalArgumentException заполнение данных по аннотациям
             int cnt = registerClass(clazz, ignoreErrors);
-            ans = "[" + clazz + "] Commands Registered: " + cnt;
+            if (cnt == -1 && this.lastError != null) {
+                ans = lastError.getClass() + " " + lastError.getMessage();
+            } else {
+                ans = "[" + clazz + "] Commands Registered: " + cnt;
+            }
             //todo вывод полных имён
         }
         return ans;
@@ -612,7 +616,7 @@ public class CmdManager {
         if (w.isHelpCmdOrNoArgs()) {
             ans = "(class)";
         } else {
-            String clazz = w.arg(w.aipp());//"org.swarg.mcforge.tools.DebugTools"
+            String clazz = CmdUtil.getClassNameFrom(w.arg(w.aipp()));
             int cnt = unregClass(clazz);
             ans = "["+ clazz + "] Command UnRegistered: " + cnt;
         }
@@ -631,7 +635,7 @@ public class CmdManager {
         if (w.isHelpCmdOrNoArgs() || w.argsCount() < 2) {
             ans = "(class) (method) [name] [sname]";
         } else {
-            String clazz = w.arg(w.aipp());
+            String clazz = CmdUtil.getClassNameFrom(w.arg(w.aipp()));
             String method= w.arg(w.aipp());
             String name  = w.arg(w.aipp());//имена не обязательны
             String sname = w.arg(w.aipp());
