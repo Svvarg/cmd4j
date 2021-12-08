@@ -367,10 +367,10 @@ public class CmdManager {
                     sb.append('\n').append("     ");//?
                 }
                 sb.append(' ').append(c.usage());
+                //сколько минимум аргументов нужно для вызова команды
+                //"чтобы не показывало Usage"
+                sb.append(" [ReqArgs:").append(c.reqArgs()).append("] ");
             }
-            //сколько минимум аргументов нужно для вызова команды
-            //"чтобы не показывало Usage"
-            sb.append(" [ReqArgs:").append(c.reqArgs()).append("] ");
 
         }
         return sb;
@@ -562,7 +562,7 @@ public class CmdManager {
             appendCmdBoxInfo в наследниках CmdManager`a*/
             boolean verbose   =  w.hasOpt("-v", "-verbose");
             //для одной конкретной
-            if (w.hasArg()) {
+            if (w.hasArg() && !w.isArgEqual(w.ai(), "*")) {
                 final String cmd = w.arg(w.ai());
                 if (hasCmd(cmd)) {
                     CmdMHBox box = getCmdBox(cmd);
